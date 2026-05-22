@@ -81,9 +81,11 @@ class Vc2008Test {
         assertEquals(listOf("a", "b", "c"), args)
     }
 
-    // Extra tests from https://daviddeley.com/autohotkey/parameters/parameters.htm#WIN
+    // Extra tests from https://daviddeley.com/autohotkey/parameters/parameters.htm#WIN.
+    // Upstream nests these in a sub-module; Kotlin flattens them here while preserving
+    // the upstream function names.
     @Test
-    fun extraFromDavidDeleyExamples() {
+    fun examples() {
         // Single word is okay
         assertEquals(listOf("CallMeIshmael"), parse("CallMeIshmael"))
 
@@ -115,7 +117,7 @@ class Vc2008Test {
     }
 
     @Test
-    fun extraFromDavidDeleyCommonTasks() {
+    fun commonTasks() {
         // Parameter includes double quotes
         assertEquals(listOf("\"Call Me Ishmael\""), parse("\"\\\"Call Me Ishmael\\\"\""))
 
@@ -127,7 +129,7 @@ class Vc2008Test {
     }
 
     @Test
-    fun extraFromDavidDeleyExplainedExamples() {
+    fun explainedExamples() {
         // Spaces enclosed in double quotes
         assertEquals(listOf("a b c", "d", "e"), parse("\"a b c\"  d  e"))
 
@@ -148,7 +150,7 @@ class Vc2008Test {
     }
 
     @Test
-    fun extraFromDavidDeleyDoubleDoubleQuoteExamples() {
+    fun doubleDoubleQuoteExamples() {
         assertEquals(listOf("a b c\""), parse("\"a b c\"\""))
         assertEquals(
             listOf("\"CallMeIshmael\"", "b", "c"),
@@ -162,7 +164,7 @@ class Vc2008Test {
     }
 
     @Test
-    fun extraFromDavidDeleyTripleDoubleQuoteExamples() {
+    fun tripleDoubleQuoteExamples() {
         assertEquals(listOf("\"Call Me Ishmael\""), parse("\"\"\"Call Me Ishmael\"\"\""))
 
         // Same as above
@@ -173,7 +175,7 @@ class Vc2008Test {
     }
 
     @Test
-    fun extraFromDavidDeleyQuadrupleDoubleQuoteExamples() {
+    fun quadrupleDoubleQuoteExamples() {
         assertEquals(
             listOf("\"Call", "Me", "Ishmael\""),
             parse("\"\"\"\"Call Me Ishmael\"\"\"\""),
