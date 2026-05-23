@@ -209,10 +209,18 @@ kotlin {
         binaries.framework { baseName = "Winsplit"; xcf.add(this) }
     }
     iosSimulatorArm64 {
-        binaries.framework { baseName = "Winsplit"; xcf.add(this) }
+        binaries.framework {
+            baseName = "Winsplit"
+            isStatic = true
+            xcf.add(this)
+        }
     }
     iosX64 {
-        binaries.framework { baseName = "Winsplit"; xcf.add(this) }
+        binaries.framework {
+            baseName = "Winsplit"
+            isStatic = true
+            xcf.add(this)
+        }
     }
 
     tvosArm64 {
