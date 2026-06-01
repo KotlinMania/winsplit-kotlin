@@ -5,7 +5,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class Vc2008Test {
-
     @Test
     fun shouldSupportSingleWord() {
         val args = parse("word")
