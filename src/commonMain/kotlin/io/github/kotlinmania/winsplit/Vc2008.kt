@@ -58,18 +58,35 @@ package io.github.kotlinmania.winsplit
  * -- | -- | -- | -- | --
  * "a b c"  d  e | a b c | d | e | spaces enclosed in double quotes
  * "ab\\"c"  "\\\\"  d | ab"c | \\ | d | \\" → "\\\\" → \\ + begin or end a double quoted part
- * a\\\\\\b d"e f"g h | a\\\\\\b | de fg | h | backslashes not followed immediately by a double quotation mark are interpreted literally parameters are separated by spaces or tabs a double quoted part can be anywhere within a parameter the space enclosed in double quotation marks is not a delimiter
+ * a\\\\\\b d"e f"g h | a\\\\\\b | de fg | h | backslashes not followed immediately by a double
+ * quotation mark are interpreted literally. parameters are separated by spaces or tabs.
+ * a double quoted part can be anywhere within a parameter. the space enclosed in double
+ * quotation marks is not a delimiter.
  * a\\\\\\"b c d | a\\"b | c | d | 2n+1 backslashes before " → n backslashes + a literal "
- * a\\\\\\\\"b c" d e | a\\\\b c | d | e | 2n backslashes followed by a " produce n backslashes + start/end double quoted part. parameters are separated by spaces or tabs a double quoted part can be anywhere within a parameter the space enclosed in double quotation marks is not a delimiter
+ * a\\\\\\\\"b c" d e | a\\\\b c | d | e | 2n backslashes followed by a " produce n backslashes
+ * + start/end double quoted part. parameters are separated by spaces or tabs.
+ * a double quoted part can be anywhere within a parameter. the space enclosed in double
+ * quotation marks is not a delimiter.
  *
  * #### Double Double Quote Examples
  *
  * Command-Line Input | argv\[1\] | argv\[2\] | argv\[3\] | argv\[4\] | argv\[5\] | Comment
  * -- | -- | -- | -- | -- | -- | --
- * "a b c"" | a b c" |   |   |   |   | " Begin double quoted part."" while in a double quoted part → accept 2nd " literally, double quoted part continues
- * """CallMeIshmael"""  b  c | "CallMeIshmael" | b | c |   |   | " Begin double quoted part."" while in a double quoted part → accept 2nd " literally, double quoted part continues" not followed by another " (i.e. not "") while in a double quoted part → ends the double quoted partParameters are delimited by spaces or tabs.
- * """Call Me Ishmael""" | "Call Me Ishmael"|   |   |   |   | " Begin double quoted part."" while in a double quoted part → accept 2nd " literally, double quoted part continues" not followed by another " (i.e. not "") while in a double quoted part → ends the double quoted part
- * """"Call Me Ishmael"" b c | "Call | Me | Ishmael | b | c | " Begin double quoted part."" while in a double quoted part → accept 2nd " literally, double quoted part continues" not followed by another " (i.e. not "") in a double quoted part → ends the double quoted partParameters are delimited by spaces or tabs.(note "" outside of double quoted block begins and then immediately ends a double quoted part.)
+ * "a b c"" | a b c" |   |   |   |   | " Begin double quoted part.
+ * "" while in a double quoted part → accept 2nd " literally, double quoted part continues.
+ * """CallMeIshmael"""  b  c | "CallMeIshmael" | b | c |   |   | " Begin double quoted part.
+ * "" while in a double quoted part → accept 2nd " literally, double quoted part continues.
+ * " not followed by another " (i.e. not "") while in a double quoted part → ends the double
+ * quoted part. Parameters are delimited by spaces or tabs.
+ * """Call Me Ishmael""" | "Call Me Ishmael"|   |   |   |   | " Begin double quoted part.
+ * "" while in a double quoted part → accept 2nd " literally, double quoted part continues.
+ * " not followed by another " (i.e. not "") while in a double quoted part → ends the double
+ * quoted part.
+ * """"Call Me Ishmael"" b c | "Call | Me | Ishmael | b | c | " Begin double quoted part.
+ * "" while in a double quoted part → accept 2nd " literally, double quoted part continues.
+ * " not followed by another " (i.e. not "") in a double quoted part → ends the double
+ * quoted part. Parameters are delimited by spaces or tabs.
+ * (note "" outside of double quoted block begins and then immediately ends a double quoted part.)
  *
  *
  *
@@ -144,8 +161,9 @@ package io.github.kotlinmania.winsplit
  * ![parsingrules](https://user-images.githubusercontent.com/2481802/182859707-008040c5-39eb-4e2a-949a-89911fa5a973.png)
  */
 
-/** Parses a command line string into arguments using the VC++ 2008 rules */
-fun parse(s: String): List<String> {
+private class ParserState(
+    val s: String,
+) {
     val args = mutableListOf<String>()
     var arg = StringBuilder()
     var backslashCnt = 0
@@ -153,116 +171,100 @@ fun parse(s: String): List<String> {
     var i = 0
     val n = s.length
 
-    while (i < n) {
+    fun hasNext(): Boolean = i < n
+
+    fun nextChar(): Char {
         val c = s[i]
         i++
+        return c
+    }
 
-        // Check the next character to see if it is a quote
-        val isQuoteNext = i < n && s[i] == '"'
+    private fun isQuoteNext(): Boolean = i < n && s[i] == '"'
 
-        // True if we have an even number of backslashes
+    fun handleQuote(): Boolean {
         val evenBackslashCnt = backslashCnt % 2 == 0
-
-        // Flag to skip adding the character (for use when starting a quote)
+        val isQuoteNext = isQuoteNext()
         var skipAddingChar = false
 
-        when {
-            // Backslash should just increase the count without immediately adding the char
-            c == '\\' -> {
-                backslashCnt += 1
-                continue
-            }
-
-            // Quote with even number of backslashes and already within a quote and next
-            // character is also a quote
-            c == '"' && evenBackslashCnt && inQuote && isQuoteNext -> {
-                // Move to second quote (essentially skip it since both are ")
-                i++
-
-                // Set backslash cnt to N/2 so we add N/2
-                backslashCnt /= 2
-            }
-
-            // Quote with even number of backslashes and already within a quote
-            c == '"' && evenBackslashCnt && inQuote -> {
-                // Flag that we are no longer in a quote
-                inQuote = false
-
-                // Don't add this doublequote as it is just marking the end of a quote
-                skipAddingChar = true
-
-                // Set backslash cnt to N/2 so we add N/2
-                //
-                // 2N backslashes -> N backslashes + end quote
-                backslashCnt /= 2
-            }
-
-            // Quote with even number of backslashes, but not within a quote
-            c == '"' && evenBackslashCnt -> {
+        if (evenBackslashCnt) {
+            if (inQuote) {
+                if (isQuoteNext) {
+                    // Move to second quote (essentially skip it since both are ")
+                    i++
+                } else {
+                    // Flag that we are no longer in a quote
+                    inQuote = false
+                    // Don't add this doublequote as it is just marking the end of a quote
+                    skipAddingChar = true
+                }
+            } else {
                 // Flag that we are now in a quote
                 inQuote = true
-
                 // Don't add this doublequote as it is just marking the start of a quote
                 skipAddingChar = true
-
-                // Set backslash cnt to N/2 so we add N/2
-                //
-                // 2N backslashes -> N backslashes + start quote
-                backslashCnt /= 2
             }
-
-            // Quote with odd number of backslashes
-            c == '"' -> {
-                // Set backslash cnt to N/2 so we add N/2
-                //
-                // 2N + 1 backslashes -> N backslashes + literal quote
-                backslashCnt /= 2
-            }
-
-            // Quote with odd number of backslashes or anything else
-            else -> {}
         }
+        backslashCnt /= 2
+        return skipAddingChar
+    }
+}
+
+/** Parses a command line string into arguments using the VC++ 2008 rules */
+fun parse(s: String): List<String> {
+    val state = ParserState(s)
+    while (state.hasNext()) {
+        val c = state.nextChar()
+        if (c == '\\') {
+            state.backslashCnt += 1
+            continue
+        }
+
+        val skipAddingChar =
+            if (c == '"') {
+                state.handleQuote()
+            } else {
+                false
+            }
 
         // Add backslashes to arg and reset counter
-        if (backslashCnt > 0) {
-            addNBackslashes(arg, backslashCnt)
-            backslashCnt = 0
+        if (state.backslashCnt > 0) {
+            addNBackslashes(state.arg, state.backslashCnt)
+            state.backslashCnt = 0
         }
 
-        // If we are in a quote, then we should consume everything,
-        // otherwise once we hit whitespace we want to finish the arg
-        if (!inQuote && isWhitespaceOrNull(c)) {
-            if (arg.isNotEmpty()) {
-                args.add(arg.toString())
-                arg = StringBuilder()
+        // If we are not in a quote, then once we hit whitespace we want to finish the arg,
+        // otherwise we consume everything.
+        if (!state.inQuote && isWhitespaceOrNull(c)) {
+            if (state.arg.isNotEmpty()) {
+                state.args.add(state.arg.toString())
+                state.arg = StringBuilder()
             }
         } else if (!skipAddingChar) {
-            arg.append(c)
+            state.arg.append(c)
         }
     }
 
     // Add any remaining backslashes as these were at the end of the string
-    if (backslashCnt > 0) {
-        addNBackslashes(arg, backslashCnt)
+    if (state.backslashCnt > 0) {
+        addNBackslashes(state.arg, state.backslashCnt)
     }
 
-    if (arg.isNotEmpty()) {
-        args.add(arg.toString())
+    if (state.arg.isNotEmpty()) {
+        state.args.add(state.arg.toString())
     }
 
-    return args
+    return state.args
 }
 
-private fun addNBackslashes(s: StringBuilder, n: Int) {
+private fun addNBackslashes(
+    s: StringBuilder,
+    n: Int,
+) {
     repeat(n) {
         s.append('\\')
     }
 }
 
-private fun isWhitespace(c: Char): Boolean {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n'
-}
+private fun isWhitespace(c: Char): Boolean = c == ' ' || c == '\t' || c == '\r' || c == '\n'
 
-private fun isWhitespaceOrNull(c: Char): Boolean {
-    return isWhitespace(c) || c == '\u0000'
-}
+private fun isWhitespaceOrNull(c: Char): Boolean = isWhitespace(c) || c == '\u0000'
