@@ -1,4 +1,4 @@
-// port-lint: source src/vc_2008.rs
+// port-lint: source vc_2008.rs
 package io.github.kotlinmania.winsplit
 
 /**

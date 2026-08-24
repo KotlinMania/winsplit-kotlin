@@ -1,4 +1,4 @@
-// port-lint: source src/vc_2008.rs
+// port-lint: tests vc_2008.rs
 package io.github.kotlinmania.winsplit
 
 import kotlin.test.Test
