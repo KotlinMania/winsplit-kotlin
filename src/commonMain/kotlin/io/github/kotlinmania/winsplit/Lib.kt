@@ -1,4 +1,4 @@
-// port-lint: source src/lib.rs
+// port-lint: source lib.rs
 package io.github.kotlinmania.winsplit
 
 /** Splits the given string into arguments following VC++ 2008 rules. */
