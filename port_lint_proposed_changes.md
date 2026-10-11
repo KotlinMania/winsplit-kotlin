@@ -1,6 +1,6 @@
 # port-lint Proposed Changes
 
-**Generated:** 2026-08-28
+**Generated:** 2026-10-10
 **Source:** tmp/winsplit/src
 **Target:** src/commonMain/kotlin/io/github/kotlinmania/winsplit
 
