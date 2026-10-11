@@ -161,99 +161,112 @@ package io.github.kotlinmania.winsplit
  * ![parsingrules](https://user-images.githubusercontent.com/2481802/182859707-008040c5-39eb-4e2a-949a-89911fa5a973.png)
  */
 
-private class ParserState(
-    val s: String,
-) {
+/** Parses a command line string into arguments using the VC++ 2008 rules */
+fun parse(s: String): List<String> {
     val args = mutableListOf<String>()
     var arg = StringBuilder()
     var backslashCnt = 0
     var inQuote = false
     var i = 0
-    val n = s.length
 
-    fun hasNext(): Boolean = i < n
-
-    fun nextChar(): Char {
+    while (i < s.length) {
         val c = s[i]
         i++
-        return c
-    }
 
-    private fun isQuoteNext(): Boolean = i < n && s[i] == '"'
+        // Check the next character to see if it is a quote
+        val isQuoteNext = i < s.length && s[i] == '"'
 
-    fun handleQuote(): Boolean {
+        // True if we have an even number of backslashes
         val evenBackslashCnt = backslashCnt % 2 == 0
-        val isQuoteNext = isQuoteNext()
+
+        // Flag to skip adding the character (for use when starting a quote)
         var skipAddingChar = false
 
-        if (evenBackslashCnt) {
-            if (inQuote) {
-                if (isQuoteNext) {
-                    // Move to second quote (essentially skip it since both are ")
-                    i++
-                } else {
-                    // Flag that we are no longer in a quote
-                    inQuote = false
-                    // Don't add this doublequote as it is just marking the end of a quote
-                    skipAddingChar = true
-                }
-            } else {
+        when {
+            // Backslash should just increase the count without immediately adding the char
+            c == '\\' -> {
+                backslashCnt += 1
+                continue
+            }
+
+            // Quote with even number of backslashes and already within a quote and next
+            // character is also a quote
+            c == '"' && evenBackslashCnt && inQuote && isQuoteNext -> {
+                // Move to second quote (essentially skip it since both are ")
+                i++
+
+                // Set backslash cnt to N/2 so we add N/2
+                backslashCnt /= 2
+            }
+
+            // Quote with even number of backslashes and already within a quote
+            c == '"' && evenBackslashCnt && inQuote -> {
+                // Flag that we are no longer in a quote
+                inQuote = false
+
+                // Don't add this doublequote as it is just marking the end of a quote
+                skipAddingChar = true
+
+                // Set backslash cnt to N/2 so we add N/2
+                //
+                // 2N backslashes -> N backslashes + end quote
+                backslashCnt /= 2
+            }
+
+            // Quote with even number of backslashes, but not within a quote
+            c == '"' && evenBackslashCnt -> {
                 // Flag that we are now in a quote
                 inQuote = true
+
                 // Don't add this doublequote as it is just marking the start of a quote
                 skipAddingChar = true
-            }
-        }
-        backslashCnt /= 2
-        return skipAddingChar
-    }
-}
 
-/** Parses a command line string into arguments using the VC++ 2008 rules */
-fun parse(s: String): List<String> {
-    val state = ParserState(s)
-    while (state.hasNext()) {
-        val c = state.nextChar()
-        if (c == '\\') {
-            state.backslashCnt += 1
-            continue
-        }
-
-        val skipAddingChar =
-            if (c == '"') {
-                state.handleQuote()
-            } else {
-                false
+                // Set backslash cnt to N/2 so we add N/2
+                //
+                // 2N backslashes -> N backslashes + start quote
+                backslashCnt /= 2
             }
+
+            // Quote with odd number of backslashes
+            c == '"' -> {
+                // Set backslash cnt to N/2 so we add N/2
+                //
+                // 2N + 1 backslashes -> N backslashes + literal quote
+                backslashCnt /= 2
+            }
+
+            // Quote with odd number of backslashes or anything else
+            else -> {}
+        }
 
         // Add backslashes to arg and reset counter
-        if (state.backslashCnt > 0) {
-            addNBackslashes(state.arg, state.backslashCnt)
-            state.backslashCnt = 0
+        if (backslashCnt > 0) {
+            addNBackslashes(arg, backslashCnt)
+            backslashCnt = 0
         }
 
-        // If we are not in a quote, then once we hit whitespace we want to finish the arg,
-        // otherwise we consume everything.
-        if (!state.inQuote && isWhitespaceOrNull(c)) {
-            if (state.arg.isNotEmpty()) {
-                state.args.add(state.arg.toString())
-                state.arg = StringBuilder()
+        // If we are in a quote, then we should consume everything,
+        // otherwise once we hit whitespace we want to finish the arg
+        if (!inQuote && isWhitespaceOrNull(c)) {
+            if (arg.isNotEmpty()) {
+                args.add(arg.toString())
+                arg = StringBuilder()
             }
         } else if (!skipAddingChar) {
-            state.arg.append(c)
+            arg.append(c)
         }
     }
 
     // Add any remaining backslashes as these were at the end of the string
-    if (state.backslashCnt > 0) {
-        addNBackslashes(state.arg, state.backslashCnt)
+    if (backslashCnt > 0) {
+        addNBackslashes(arg, backslashCnt)
     }
 
-    if (state.arg.isNotEmpty()) {
-        state.args.add(state.arg.toString())
+    if (arg.isNotEmpty()) {
+        args.add(arg.toString())
     }
 
-    return state.args
+    return args
 }
 
 private fun addNBackslashes(
