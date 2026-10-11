@@ -8,10 +8,12 @@ Based on AST analysis, here are the concrete next steps.
 - **Function parity:** 22/22 matched (target 27) — 100.0%
 - **Class/type parity:** 0/0 matched (target 2) — N/A
 - **Combined symbol parity:** 22/22 matched (target 29) — 100.0%
-- **Average inline-code cosine:** 0.38 (function body across 2 matched files)
+- **Average inline-code cosine:** 0.16 (function body across 2 matched files)
 - **Average documentation cosine:** 0.94 (doc text across 2 matched files)
 - **Cheat-zeroed Files:** 1
-- **Critical Issues:** 1 files with <0.60 function similarity
+- **Critical Issues:** 2 files with <0.60 function similarity
+- **Needs Review:** 0 files with 0.60-0.84 function similarity
+- **Excellent:** 0 files with >=0.85 function similarity
 
 ## Priority 1: Fix Incomplete High-Dependency Files
 
@@ -41,9 +43,9 @@ Every matched file is listed below with function and type symbol parity.
 ### 2. vc_2008
 
 - **Target:** `winsplit.Vc2008`
-- **Similarity:** 0.75
+- **Similarity:** 0.31
 - **Dependents:** 0
-- **Priority Score:** 2202.5
+- **Priority Score:** 2206.9
 - **Functions:** 22/22 matched (target 26)
 - **Missing functions:** _none_
 - **Types:** 0/0 matched (target 2)
