@@ -87,6 +87,22 @@ jobs:
           DEPLOYMENT_TARGET_SETTING_NAME: MACOSX_DEPLOYMENT_TARGET
         run: ./gradlew embedSwiftExportForXcode --no-configuration-cache
 
+      - name: Normalize generated Swift package manifest
+        run: |
+          PACKAGE_SWIFT="build/SPMPackage/macosArm64/Debug/Package.swift"
+          if [ -f "$PACKAGE_SWIFT" ]; then
+            python3 -c "
+          from pathlib import Path
+          import re
+          p = Path('$PACKAGE_SWIFT')
+          text = p.read_text()
+          if 'platforms:' not in text:
+              text = re.sub(r'(name:\s*\"[^\"]*\",)', r'\1\n    platforms: [.macOS(\"15.0\")],', text, count=1)
+              p.write_text(text)
+          "
+          fi
+          cd swift-test-harness && swift package reset
+
       - name: Run swift test against Kotlin-exported module
         working-directory: swift-test-harness
         run: swift test
