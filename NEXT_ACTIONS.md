@@ -4,14 +4,14 @@ Based on AST analysis, here are the concrete next steps.
 
 ## Summary
 
-- **Files Present:** 2/2 (100.0%)
-- **Function parity:** 22/22 matched (target 27) — 100.0%
-- **Class/type parity:** 0/0 matched (target 2) — N/A
-- **Combined symbol parity:** 22/22 matched (target 29) — 100.0%
-- **Average inline-code cosine:** 0.16 (function body across 2 matched files)
-- **Average documentation cosine:** 0.94 (doc text across 2 matched files)
-- **Cheat-zeroed Files:** 1
-- **Critical Issues:** 2 files with <0.60 function similarity
+- **Files Present:** 1/2 (50.0%)
+- **Function parity:** 22/22 matched (target 22) — 100.0%
+- **Class/type parity:** 0/0 matched (target 1) — N/A
+- **Combined symbol parity:** 22/22 matched (target 23) — 100.0%
+- **Average inline-code cosine:** 0.33 (function body across 1 matched files)
+- **Average documentation cosine:** 1.00 (doc text across 1 matched files)
+- **Cheat-zeroed Files:** 0
+- **Critical Issues:** 1 files with <0.60 function similarity
 - **Needs Review:** 0 files with 0.60-0.84 function similarity
 - **Excellent:** 0 files with >=0.85 function similarity
 
@@ -29,26 +29,15 @@ No missing high-value files detected.
 
 Every matched file is listed below with function and type symbol parity.
 
-### 1. lib
-
-- **Target:** `winsplit.Lib [ZERO]`
-- **Similarity:** 0.00
-- **Dependents:** 1
-- **Priority Score:** 1000010.0
-- **Functions:** 0/0 matched (target 1)
-- **Missing functions:** _none_
-- **Types:** 0/0 matched
-- **Missing types:** _none_
-
-### 2. vc_2008
+### 1. vc_2008
 
 - **Target:** `winsplit.Vc2008`
-- **Similarity:** 0.31
+- **Similarity:** 0.33
 - **Dependents:** 0
-- **Priority Score:** 2206.9
-- **Functions:** 22/22 matched (target 26)
+- **Priority Score:** 2206.7
+- **Functions:** 22/22 matched
 - **Missing functions:** _none_
-- **Types:** 0/0 matched (target 2)
+- **Types:** 0/0 matched (target 1)
 - **Missing types:** _none_
 - **Tests:** 18/18 matched
 
@@ -60,4 +49,17 @@ For each file to be considered "complete":
 - All tests ported
 - Documentation ported
 - port-lint header present
+
+## Reexport / Wiring Modules
+
+These files match `reexport_modules` patterns in `.ast_distance_config.json`. They are filtered out of
+normal priority and missing-file ladders because they are wiring
+modules, not direct logic ports. Consult them for call-site routing;
+do not treat them as the next implementation target by default.
+
+### Missing
+
+| Source | Expected target | Deps | Source path | Expected path |
+|--------|-----------------|------|-------------|---------------|
+| `lib` | `Lib` | 1 | `lib.rs` | `Lib.kt` |
 
